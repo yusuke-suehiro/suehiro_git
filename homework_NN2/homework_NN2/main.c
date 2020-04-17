@@ -30,7 +30,7 @@ int main(int argc, const char * argv[]) {
     FILE *fp;
     int **data, *result;
     double ***sum_z, ***sum_u;
-    int para1=0;
+    int para1=0, flag=0;
     int i=0, j=0;
     double learning=0.01;
     
@@ -46,6 +46,8 @@ int main(int argc, const char * argv[]) {
     input_data(&mid_height);
     printf("中間層の層数を");      //中間層の層数を入力
     input_data(&mid_width);
+    printf("一括(1)、逐次(2)を");      //中間層の層数を入力
+    input_data(&flag);
     
     fp=fopen("data.txt","r");
     
@@ -135,12 +137,146 @@ int main(int argc, const char * argv[]) {
            }
        }
     
-    printf("計算中...\n\n");
-    
-    
-    for (int cnt=0;cnt<COUNT_SIZE;cnt++) {
-        int count=0;
-        double eor=0;
+    if (flag==1) {      //一括学習
+        printf("計算中...\n\n");
+        
+        
+        for (int cnt=0;cnt<COUNT_SIZE;cnt++) {
+            int count=0;
+            double eor=0;
+            
+            //初期化
+            for (int num=0;num<datanum+data2num;num++) {
+                for (int i=0;i<mid_width+1;i++) {
+                    for (int j=0;j<mid_height+1;j++) {
+                        
+                        sum_z[num][i][j]=0;
+                    }
+                }
+            }
+            for (int num=0;num<datanum+data2num;num++) {
+                for (int i=0;i<mid_width+2;i++) {
+                    for (int j=0;j<mid_height+1;j++) {
+                        sum_u[num][i][j]=0;
+                        if (j==0) {
+                            if (i<mid_width+1) {
+                                mid[num][i][j]=1;
+                            }
+                            else {
+                                mid[num][i][j]=0;
+                            }
+                        }
+                        else {
+                            mid[num][i][j]=0;
+                        }
+                    }
+                }
+            }
+            
+            
+            //順方向伝搬
+            for (int num=0;num<datanum;num++) {
+                for (int layer=0;layer<mid_width+2;layer++) {
+                    if (layer==0) {
+                        for (int now=0;now<innum+1;now++) {
+                            mid[num][layer][now]=(double)data[num][now];
+                            
+                        }
+                        for (int now=0;now<innum+1;now++) {
+                            for (int next=1;next<mid_height+1;next++) {
+                                sum_u[num][layer+1][next]+=mid[num][layer][now]*w[layer][now][next];
+                            }
+                        }
+                    }
+                    else {
+                        if (layer < mid_width+1 ) {
+                            for (int now=1;now<mid_height+1;now++) {
+                                mid[num][layer][now]=sigmoid(sum_u[num][layer][now]);
+                            }
+                            for (int now=0;now<mid_height+1;now++) {
+                                for (int next=1;next<mid_height+1;next++) {
+                                    sum_u[num][layer+1][next]+=mid[num][layer][now]*w[layer][now][next];
+                                }
+                            }
+                        }
+                        else {
+                            mid[num][layer][1]=sigmoid(sum_u[num][layer][1]);
+                            eor+=(mid[num][mid_width+1][1]-result[num])*(mid[num][mid_width+1][1]-result[num]);
+                            
+                        }
+                    }
+                }
+            }
+                //printf("cnt %d : %lf\n",cnt,eor);
+            
+                for (int num=0;num<datanum;num++) {
+                    for (int layer=0;layer<mid_width+2;layer++) {
+                    
+                    
+                    if (eor < 0.001) {
+                        count+=1;
+                        if (count==datanum) {
+                            
+                            cnt=COUNT_SIZE;
+                        }
+                    }
+                    
+                    //逆伝搬
+                    for (int layer=mid_width+1;layer>0;layer--) {
+                        if (layer==mid_width+1) {
+                            for (int next=0;next<mid_height+1;next++) {
+                                //sum_z[num][layer-1][next]+=(mid[num][layer][1]-result[num])*mid[num][layer][1]*(1-mid[num][layer][1])*w[layer-1][next][1];
+                                sum_z[num][layer-1][next]+=(mid[num][layer][1]-result[num])*mid[num][layer][1]*(1-mid[num][layer][1])*w[layer-1][next][1];
+                            }
+                            for (int next=0;next<mid_height+1;next++) {
+                                double tmp=0;
+                                
+                                tmp+=(mid[num][layer][1]-result[num])*mid[num][layer-1][next]*mid[num][layer][1]*(1-mid[num][layer][1]);
+                                
+                                w[layer-1][next][1]=w[layer-1][next][1]-2*learning*tmp;
+                            }
+                        }
+                        else {
+                            if (layer == 1) {
+                                for (int now=1;now<mid_height+1;now++) {
+                                    for (int next=0;next<innum+1;next++) {
+                                        sum_z[num][layer-1][next]+=sum_z[num][layer][now]*w[layer-1][next][now]*mid[num][layer][now]*(1-mid[num][layer][now]);
+                                    }
+                                }
+                                for (int now=1;now<mid_height+1;now++) {
+                                    for (int next=0;next<innum+1;next++) {
+                                        double tmp=0;
+                                        
+                                        tmp+=sum_z[num][layer][now]*mid[num][layer-1][next]*mid[num][layer][now]*(1-mid[num][layer][now]);
+                                        w[layer-1][next][now]=w[layer-1][next][now]-learning*tmp;
+                                    }
+                                }
+                            }
+                            else {
+                                for (int now=1;now<mid_height+1;now++) {
+                                    for (int next=0;next<mid_height+1;next++) {
+                                        sum_z[num][layer-1][next]+=sum_z[num][layer][now]*w[layer-1][next][now]*mid[num][layer][now]*(1-mid[num][layer][now]);
+                                    }
+                                }
+                                for (int now=1;now<mid_height+1;now++) {
+                                    for (int next=0;next<innum+1;next++) {
+                                        double tmp=0;
+                                        tmp+=sum_z[num][layer][now]*mid[num][layer-1][next]*mid[num][layer][now]*(1-mid[num][layer][now]);
+                                        w[layer-1][next][now]=w[layer-1][next][now]-learning*tmp;
+                                    }
+                                }
+                            }
+                        }
+                            
+                    }
+                }
+                }
+        }
+        
+        
+        printf ("計算が終了しました\n\n");
+        printf("一括学習 結果\n\n");
+        
         
         //初期化
         for (int num=0;num<datanum+data2num;num++) {
@@ -170,14 +306,11 @@ int main(int argc, const char * argv[]) {
             }
         }
         
-        
-        //順方向伝搬
-        for (int num=0;num<datanum;num++) {
+        for (int num=0;num<datanum+data2num;num++) {
             for (int layer=0;layer<mid_width+2;layer++) {
                 if (layer==0) {
                     for (int now=0;now<innum+1;now++) {
                         mid[num][layer][now]=(double)data[num][now];
-                        
                     }
                     for (int now=0;now<innum+1;now++) {
                         for (int next=1;next<mid_height+1;next++) {
@@ -198,146 +331,259 @@ int main(int argc, const char * argv[]) {
                     }
                     else {
                         mid[num][layer][1]=sigmoid(sum_u[num][layer][1]);
-                        eor+=(mid[num][mid_width+1][1]-result[num])*(mid[num][mid_width+1][1]-result[num]);
-                        
+                        if (num < datanum) {
+                            printf("教師データ 出力　 %d :%lf\n",num+1,mid[num][layer][1]);
+                            printf("教師データ データ %d :%d\n\n",num+1,result[num]);
+                        }
+                        else {
+                            printf("未学習データ 出力　 %d :%lf\n",num-datanum+1,mid[num][layer][1]);
+                            printf("未学習データ データ %d :%d\n\n",num-datanum+1,result[num]);
+                        }
                     }
-                }
             }
         }
-            printf("cnt %d : %lf\n",cnt,eor);
-        
-            for (int num=0;num<datanum;num++) {
-                for (int layer=0;layer<mid_width+2;layer++) {
+        }
+}
+        else  {         //逐次学習
+            printf("計算中...\n\n");
+            
+            
+            for (int cnt=0;cnt<COUNT_SIZE;cnt++) {
                 
+                int count=0;
+                double eor=0;
                 
-                if (eor < 0.001) {
-                    count+=1;
-                    if (count==datanum) {
-                        
-                        cnt=COUNT_SIZE;
+                //初期化
+                for (int num=0;num<datanum+data2num;num++) {
+                    for (int i=0;i<mid_width+1;i++) {
+                        for (int j=0;j<mid_height+1;j++) {
+                            
+                            sum_z[num][i][j]=0;
+                        }
+                    }
+                }
+                for (int num=0;num<datanum+data2num;num++) {
+                    for (int i=0;i<mid_width+2;i++) {
+                        for (int j=0;j<mid_height+1;j++) {
+                            sum_u[num][i][j]=0;
+                            if (j==0) {
+                                if (i<mid_width+1) {
+                                    mid[num][i][j]=1;
+                                }
+                                else {
+                                    mid[num][i][j]=0;
+                                }
+                            }
+                            else {
+                                mid[num][i][j]=0;
+                            }
+                        }
                     }
                 }
                 
-                //逆伝搬
-                for (int layer=mid_width+1;layer>0;layer--) {
-                    if (layer==mid_width+1) {
-                        for (int next=0;next<mid_height+1;next++) {
-                            //sum_z[num][layer-1][next]+=(mid[num][layer][1]-result[num])*mid[num][layer][1]*(1-mid[num][layer][1])*w[layer-1][next][1];
-                            sum_z[num][layer-1][next]+=(mid[num][layer][1]-result[num])*mid[num][layer][1]*(1-mid[num][layer][1])*w[layer-1][next][1];
-                        }
-                        for (int next=0;next<mid_height+1;next++) {
-                            double tmp=0;
-                            
-                            tmp+=(mid[num][layer][1]-result[num])*mid[num][layer-1][next]*mid[num][layer][1]*(1-mid[num][layer][1]);
-                            
-                            w[layer-1][next][1]=w[layer-1][next][1]-2*learning*tmp;
-                        }
-                    }
-                    else {
-                        if (layer == 1) {
-                            for (int now=1;now<mid_height+1;now++) {
-                                for (int next=0;next<innum+1;next++) {
-                                    sum_z[num][layer-1][next]+=sum_z[num][layer][now]*w[layer-1][next][now]*mid[num][layer][now]*(1-mid[num][layer][now]);
-                                }
+                
+                //順方向伝搬
+                for (int num=0;num<datanum;num++) {
+                    for (int layer=0;layer<mid_width+2;layer++) {
+                        if (layer==0) {
+                            for (int now=0;now<innum+1;now++) {
+                                mid[num][layer][now]=(double)data[num][now];
+                                
                             }
-                            for (int now=1;now<mid_height+1;now++) {
-                                for (int next=0;next<innum+1;next++) {
-                                    double tmp=0;
-                                    
-                                    tmp+=sum_z[num][layer][now]*mid[num][layer-1][next]*mid[num][layer][now]*(1-mid[num][layer][now]);
-                                    w[layer-1][next][now]=w[layer-1][next][now]-learning*tmp;
+                            for (int now=0;now<innum+1;now++) {
+                                for (int next=1;next<mid_height+1;next++) {
+                                    sum_u[num][layer+1][next]+=mid[num][layer][now]*w[layer][now][next];
                                 }
                             }
                         }
                         else {
-                            for (int now=1;now<mid_height+1;now++) {
-                                for (int next=0;next<mid_height+1;next++) {
-                                    sum_z[num][layer-1][next]+=sum_z[num][layer][now]*w[layer-1][next][now]*mid[num][layer][now]*(1-mid[num][layer][now]);
+                            if (layer < mid_width+1 ) {
+                                for (int now=1;now<mid_height+1;now++) {
+                                    mid[num][layer][now]=sigmoid(sum_u[num][layer][now]);
+                                }
+                                for (int now=0;now<mid_height+1;now++) {
+                                    for (int next=1;next<mid_height+1;next++) {
+                                        sum_u[num][layer+1][next]+=mid[num][layer][now]*w[layer][now][next];
+                                    }
                                 }
                             }
-                            for (int now=1;now<mid_height+1;now++) {
-                                for (int next=0;next<innum+1;next++) {
-                                    double tmp=0;
-                                    tmp+=sum_z[num][layer][now]*mid[num][layer-1][next]*mid[num][layer][now]*(1-mid[num][layer][now]);
-                                    w[layer-1][next][now]=w[layer-1][next][now]-learning*tmp;
-                                }
+                            else {
+                                mid[num][layer][1]=sigmoid(sum_u[num][layer][1]);
+                                eor+=(mid[num][mid_width+1][1]-result[num])*(mid[num][mid_width+1][1]-result[num]);
+                                
                             }
                         }
                     }
-                        
-                }
-            }
-            }
-    }
-    
-    
-    printf ("計算が終了しました\n\n");
-    
-    //初期化
-    for (int num=0;num<datanum+data2num;num++) {
-        for (int i=0;i<mid_width+1;i++) {
-            for (int j=0;j<mid_height+1;j++) {
                 
-                sum_z[num][i][j]=0;
+                    //printf("cnt %d : %lf\n",cnt,eor);
+                
+                    
+                        for (int layer=0;layer<mid_width+2;layer++) {
+                        
+                        
+                        if (eor < 0.001) {
+                            count+=1;
+                            
+                        }
+                        
+                        //逆伝搬
+                        for (int layer=mid_width+1;layer>0;layer--) {
+                            if (layer==mid_width+1) {
+                                for (int next=0;next<mid_height+1;next++) {
+                                    //sum_z[num][layer-1][next]+=(mid[num][layer][1]-result[num])*mid[num][layer][1]*(1-mid[num][layer][1])*w[layer-1][next][1];
+                                    sum_z[num][layer-1][next]+=(mid[num][layer][1]-result[num])*mid[num][layer][1]*(1-mid[num][layer][1])*w[layer-1][next][1];
+                                }
+                                for (int next=0;next<mid_height+1;next++) {
+                                    double tmp=0;
+                                    
+                                    tmp+=(mid[num][layer][1]-result[num])*mid[num][layer-1][next]*mid[num][layer][1]*(1-mid[num][layer][1]);
+                                    
+                                    w[layer-1][next][1]=w[layer-1][next][1]-2*learning*tmp;
+                                }
+                            }
+                            else {
+                                if (layer == 1) {
+                                    for (int now=1;now<mid_height+1;now++) {
+                                        for (int next=0;next<innum+1;next++) {
+                                            sum_z[num][layer-1][next]+=sum_z[num][layer][now]*w[layer-1][next][now]*mid[num][layer][now]*(1-mid[num][layer][now]);
+                                        }
+                                    }
+                                    for (int now=1;now<mid_height+1;now++) {
+                                        for (int next=0;next<innum+1;next++) {
+                                            double tmp=0;
+                                            
+                                            tmp+=sum_z[num][layer][now]*mid[num][layer-1][next]*mid[num][layer][now]*(1-mid[num][layer][now]);
+                                            w[layer-1][next][now]=w[layer-1][next][now]-learning*tmp;
+                                        }
+                                    }
+                                }
+                                else {
+                                    for (int now=1;now<mid_height+1;now++) {
+                                        for (int next=0;next<mid_height+1;next++) {
+                                            sum_z[num][layer-1][next]+=sum_z[num][layer][now]*w[layer-1][next][now]*mid[num][layer][now]*(1-mid[num][layer][now]);
+                                        }
+                                    }
+                                    for (int now=1;now<mid_height+1;now++) {
+                                        for (int next=0;next<innum+1;next++) {
+                                            double tmp=0;
+                                            tmp+=sum_z[num][layer][now]*mid[num][layer-1][next]*mid[num][layer][now]*(1-mid[num][layer][now]);
+                                            w[layer-1][next][now]=w[layer-1][next][now]-learning*tmp;
+                                        }
+                                    }
+                                }
+                            }
+                                
+                        }
+                    }
+                    }
+                printf("cnt %d : %lf\n",cnt,eor);
+                if (count==datanum) {
+                    cnt=COUNT_SIZE;
+                }
             }
-        }
-    }
-    for (int num=0;num<datanum+data2num;num++) {
-        for (int i=0;i<mid_width+2;i++) {
-            for (int j=0;j<mid_height+1;j++) {
-                sum_u[num][i][j]=0;
-                if (j==0) {
-                    if (i<mid_width+1) {
-                        mid[num][i][j]=1;
-                    }
-                    else {
-                        mid[num][i][j]=0;
-                    }
-                }
-                else {
-                    mid[num][i][j]=0;
-                }
-            }
-        }
-    }
-    
-    for (int num=0;num<datanum+data2num;num++) {
-        for (int layer=0;layer<mid_width+2;layer++) {
-            if (layer==0) {
-                for (int now=0;now<innum+1;now++) {
-                    mid[num][layer][now]=(double)data[num][now];
-                }
-                for (int now=0;now<innum+1;now++) {
-                    for (int next=1;next<mid_height+1;next++) {
-                        sum_u[num][layer+1][next]+=mid[num][layer][now]*w[layer][now][next];
+            
+            
+            printf ("計算が終了しました\n\n");
+            printf("逐次学習 結果\n\n");
+            
+            
+            //初期化
+            for (int num=0;num<datanum+data2num;num++) {
+                for (int i=0;i<mid_width+1;i++) {
+                    for (int j=0;j<mid_height+1;j++) {
+                        
+                        sum_z[num][i][j]=0;
                     }
                 }
             }
-            else {
-                if (layer < mid_width+1 ) {
-                    for (int now=1;now<mid_height+1;now++) {
-                        mid[num][layer][now]=sigmoid(sum_u[num][layer][now]);
-                    }
-                    for (int now=0;now<mid_height+1;now++) {
-                        for (int next=1;next<mid_height+1;next++) {
-                            sum_u[num][layer+1][next]+=mid[num][layer][now]*w[layer][now][next];
+            for (int num=0;num<datanum+data2num;num++) {
+                for (int i=0;i<mid_width+2;i++) {
+                    for (int j=0;j<mid_height+1;j++) {
+                        sum_u[num][i][j]=0;
+                        if (j==0) {
+                            if (i<mid_width+1) {
+                                mid[num][i][j]=1;
+                            }
+                            else {
+                                mid[num][i][j]=0;
+                            }
+                        }
+                        else {
+                            mid[num][i][j]=0;
                         }
                     }
                 }
-                else {
-                    mid[num][layer][1]=sigmoid(sum_u[num][layer][1]);
-                    if (num < datanum) {
-                        printf("教師データ 出力　 %d :%lf\n",num+1,mid[num][layer][1]);
-                        printf("教師データ データ %d :%d\n\n",num+1,result[num]);
+            }
+            
+            for (int num=0;num<datanum+data2num;num++) {
+                for (int layer=0;layer<mid_width+2;layer++) {
+                    if (layer==0) {
+                        for (int now=0;now<innum+1;now++) {
+                            mid[num][layer][now]=(double)data[num][now];
+                        }
+                        for (int now=0;now<innum+1;now++) {
+                            for (int next=1;next<mid_height+1;next++) {
+                                sum_u[num][layer+1][next]+=mid[num][layer][now]*w[layer][now][next];
+                            }
+                        }
                     }
                     else {
-                        printf("未学習データ 出力　 %d :%lf\n",num-datanum+1,mid[num][layer][1]);
-                        printf("未学習データ データ %d :%d\n\n",num-datanum+1,result[num]);
-                    }
+                        if (layer < mid_width+1 ) {
+                            for (int now=1;now<mid_height+1;now++) {
+                                mid[num][layer][now]=sigmoid(sum_u[num][layer][now]);
+                            }
+                            for (int now=0;now<mid_height+1;now++) {
+                                for (int next=1;next<mid_height+1;next++) {
+                                    sum_u[num][layer+1][next]+=mid[num][layer][now]*w[layer][now][next];
+                                }
+                            }
+                        }
+                        else {
+                            mid[num][layer][1]=sigmoid(sum_u[num][layer][1]);
+                            if (num < datanum) {
+                                printf("教師データ 出力　 %d :%lf\n",num+1,mid[num][layer][1]);
+                                printf("教師データ データ %d :%d\n\n",num+1,result[num]);
+                            }
+                            else {
+                                printf("未学習データ 出力　 %d :%lf\n",num-datanum+1,mid[num][layer][1]);
+                                printf("未学習データ データ %d :%d\n\n",num-datanum+1,result[num]);
+                            }
+                        }
                 }
-        }
+            }
+            }
     }
-    }
+
+
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     free_array(innum, outnum, mid_width, mid_height, w);
