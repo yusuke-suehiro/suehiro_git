@@ -11,7 +11,7 @@
 #include <time.h>
 #include <math.h>
 
-#define COUNT_SIZE 100000
+#define COUNT_SIZE 20000
 
 void input_data(int *num);      //データの入力をする関数
 void output_w(int innum, int outnum, int mid_width, int mid_height, double ***w);
@@ -140,6 +140,7 @@ int main(int argc, const char * argv[]) {
     
     for (int cnt=0;cnt<COUNT_SIZE;cnt++) {
         int count=0;
+        double eor=0;
         
         //初期化
         for (int num=0;num<datanum+data2num;num++) {
@@ -197,14 +198,19 @@ int main(int argc, const char * argv[]) {
                     }
                     else {
                         mid[num][layer][1]=sigmoid(sum_u[num][layer][1]);
+                        eor+=(mid[num][mid_width+1][1]-result[num])*(mid[num][mid_width+1][1]-result[num]);
                         
                     }
                 }
+            }
+        }
+            printf("cnt %d : %lf\n",cnt,eor);
+        
+            for (int num=0;num<datanum;num++) {
+                for (int layer=0;layer<mid_width+2;layer++) {
                 
-                error[num]=(mid[num][layer][1]-result[num])*(mid[num][layer][1]-result[num]);
-                //printf("%d : %lf\n",num,error[num]);
                 
-                if (error[num] < 0.001) {
+                if (eor < 0.001) {
                     count+=1;
                     if (count==datanum) {
                         
@@ -261,8 +267,9 @@ int main(int argc, const char * argv[]) {
                         
                 }
             }
-        }
+            }
     }
+    
     
     printf ("計算が終了しました\n\n");
     
@@ -331,6 +338,8 @@ int main(int argc, const char * argv[]) {
         }
     }
     }
+    
+    
     free_array(innum, outnum, mid_width, mid_height, w);
     free_array_sum(innum, outnum, datanum, mid_width, mid_height, sum_z);
     free_array_sum(innum, outnum, datanum+data2num, mid_width, mid_height, mid);
