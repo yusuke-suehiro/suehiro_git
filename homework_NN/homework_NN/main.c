@@ -11,7 +11,7 @@
 #include <time.h>
 #include <math.h>
 
-#define COUNT_SIZE 1000000
+#define COUNT_SIZE 10000
 
 void input_data(int *num);      //データの入力をする関数
 void output_w(int innum, int outnum, int mid_width, int mid_height, double ***w);
@@ -20,6 +20,7 @@ void free_array(int innum, int outnum, int mid_width, int mid_height, double ***
 void free_array_sum(int innum, int outnum, int datanum, int mid_width, int mid_height, double ***w);
 //多次元配列wを解放する関数
 double sigmoid(double s);
+void fill_v(double ***array, int i, int j, int k, double num);
 
 int main(int argc, const char * argv[]) {
     
@@ -30,7 +31,7 @@ int main(int argc, const char * argv[]) {
     double ***sum_z;
     int para1=0;
     int i=0, j=0;
-    double learning=0.0001;
+    double learning=0.01;
     
 
     
@@ -70,7 +71,7 @@ int main(int argc, const char * argv[]) {
     }
     for (int i=0;i<datanum;i++) {
         for (int j=0;j<mid_width;j++) {
-            sum_z[i][j]=malloc((mid_height)*sizeof(double *));     //入力数分、領域確保
+            sum_z[i][j]=malloc((mid_height+1)*sizeof(double *));     //入力数分、領域確保
         }
     }
     
@@ -122,8 +123,8 @@ int main(int argc, const char * argv[]) {
     w=malloc((mid_width+1)*sizeof(double *));     //重み、領域確保
     w[0]=malloc((innum+1)*sizeof(double *));     //重み、領域確保
     for (int i=0;i<innum+1;i++) {
-        w[0][i]=malloc(mid_height*sizeof(double *));     //重み、領域確保
-        for (int j=0;j<mid_height;j++) {                //重みwを-1~1の乱数に初期化
+        w[0][i]=malloc((mid_height+1)*sizeof(double *));     //重み、領域確保
+        for (int j=0;j<mid_height+1;j++) {                //重みwを-1~1の乱数に初期化
             w[0][i][j]=(double)rand()/(double)RAND_MAX;
             random=rand();
             if (random % 2 ==0) {
@@ -132,9 +133,9 @@ int main(int argc, const char * argv[]) {
         }
     }
     for (int k=1;k<mid_width;k++) {
-        w[k]=malloc(mid_height*sizeof(double *));     //重み、領域確保
-        for (int i=0;i<mid_height;i++) {
-            w[k][i]=malloc(mid_height*sizeof(double *));     //重み、領域確保
+        w[k]=malloc((mid_height+1)*sizeof(double *));     //重み、領域確保
+        for (int i=0;i<mid_height+1;i++) {
+            w[k][i]=malloc((mid_height+1)*sizeof(double *));     //重み、領域確保
             for (int j=0;j<mid_height;j++) {                //重みwを-1~1の乱数に初期化
                 w[k][i][j]=(double)rand()/(double)RAND_MAX;
                 random=rand();
@@ -144,8 +145,8 @@ int main(int argc, const char * argv[]) {
             }
         }
     }
-    w[mid_width]=malloc(mid_height*sizeof(double *));     //重み、領域確保
-    for (int i=0;i<mid_height;i++) {
+    w[mid_width]=malloc((mid_height+1)*sizeof(double *));     //重み、領域確保
+    for (int i=0;i<mid_height+1;i++) {
         w[mid_width][i]=malloc(outnum*sizeof(double *));     //重み、領域確保
         for (int j=0;j<outnum;j++) {                //重みwを-1~1の乱数に初期化
             w[mid_width][i][j]=(double)rand()/(double)RAND_MAX;
@@ -161,39 +162,45 @@ int main(int argc, const char * argv[]) {
     
     for (int cnt=0;cnt<COUNT_SIZE;cnt++) {
         int count=0;
+        fill_v(sum_z, datanum, mid_width, mid_height,0);
+        fill_v(mid, datanum+data2num, mid_width, mid_height,0);
+        for (int num=0;num<datanum;num++) {        //outを初期化
+            for (int i=0;i<outnum;i++) {
+                out[num][i]=0;
+            }
+        }
         
         //出力Yを求め、誤差関数を求める。
         for (int num=0;num<datanum;num++) {
             for (int k=0;k<mid_width+1;k++) {
                 if (k == 0) {
-                    for (int i=0;i<mid_width;i++) {     //midを初期化
-                        for (int j=0;j<mid_height;j++){
-                            mid[num][i][j]=0;
-                        }
-                    }
-                    for (int i=0;i<outnum;i++) {        //outを初期化
-                        out[num][i]=0;
-                    }
                     for (int i=0;i<innum+1;i++) {
                         for (int j=0;j<mid_height;j++) {
-                            mid[num][k][j]+=data[num][i]*w[k][i][j];
+                            mid[num][k][j]+=data[num][i]*w[k][i][j+1];
                         }
                     }
                 }
                 else if (k == mid_width) {
                     for (int i=0;i<mid_height;i++) {
                         for (int j=0;j<outnum;j++) {
-                            out[num][j]+=mid[num][k-1][i]*w[k][i][j];
+                            out[num][j]+=sigmoid(mid[num][k-1][i])*w[k][i+1][j];
                         }
                     }
+                    for (int j=0;j<outnum;j++) {
+                        out[num][j]+=data[num][0]*w[k][0][j];
+                    }
+                    
                     //printf("%d番目のデータ: %lf\n",num,sigmoid(out[num][0]));
                     error[num]=(result[num]-sigmoid(out[num][j]))*(result[num]-sigmoid(out[num][j]));
                 }
                 else {
                     for (int i=0;i<mid_height;i++) {
-                        for (int j=0;j<mid_height;j++) {
-                            mid[num][k][j]+=mid[num][k-1][i]*w[k][i][j];
+                        for (int j=1;j<=mid_height;j++) {
+                            mid[num][k][j-1]+=sigmoid(mid[num][k-1][i])*w[k][i+1][j];
                         }
+                    }
+                    for (int j=1;j<=mid_height;j++) {
+                        mid[num][k][j-1]+=data[num][0]*w[k][0][j];
                     }
                 }
             }
@@ -213,52 +220,71 @@ int main(int argc, const char * argv[]) {
                     if (k == mid_width) {
                         
                         for (int i=0;i<mid_height;i++) {
-                            sum_z[num][k-1][i]=0;
-                        }
-                        for (int i=0;i<mid_height;i++) {
-                            for (int j=0;j<outnum;j++) {
-                                
-                                w[k][i][j]=w[k][i][j]-2*learning*sigmoid(mid[num][k-1][i])*sigmoid(out[num][j])*(sigmoid(out[num][j])-result[num])*(1-sigmoid(out[num][j]));
-                            
-                            }
-                        }
-                        for (int i=0;i<mid_height;i++) {
                             for (int j=0;j<outnum;j++) {
                                 sum_z[num][k-1][i]+=(sigmoid(out[num][j])-result[num])*sigmoid(out[num][j])*(1-sigmoid(out[num][j]))*w[k][i][j];
-                                
+                            //sum_z[num][k-1][i]+=sigmoid(mid[num][k-1][i])*sigmoid(out[num][j])*(1-sigmoid(out[num][j]))*w[k][i][j];
                                 
                             }
+                        }
+                        
+                        for (int i=0;i<=mid_height;i++) {
+                           // for (int j=0;j<outnum;j++) {
+                                double tmp=0;
+                            if (i !=0 ) { tmp+=sigmoid(mid[num][k-1][i-1])*sigmoid(out[num][j])*(sigmoid(out[num][0])-result[num])*(1-sigmoid(out[num][0]));
+                                
+                                w[k][i][0]=w[k][i][0]-2*learning*tmp;
+                            }
+                            else {
+                                tmp+=data[num][0]*sigmoid(out[num][j])*(sigmoid(out[num][0])-result[num])*(1-sigmoid(out[num][0]));
+                                
+                                w[k][i][0]=w[k][i][0]-2*learning*tmp;
+                            }
+                          //  }
                         }
 
                         
                     }
+                    /*else if (k == mid_width-1) {
+                        for (int i=0;i<mid_height;i++) {
+                            sum_z[num][k][i]=0;
+                        }
+                    }
+                     */
                     else if (k == 0) {
                         for (int i=0;i<innum+1;i++) {
-                            for (int j=0;j<mid_height;j++) {
-                                w[k][i][j]=w[k][i][j]-learning*data[num][i]*sigmoid(mid[num][k][j])*(1-sigmoid(mid[num][k][j]))*sum_z[num][k][j];
+                            for (int j=1;j<=mid_height;j++) {
+                                double tmp=0;
+                                tmp+=data[num][i]*sigmoid(mid[num][k][j])*(1-sigmoid(mid[num][k][j]))*sum_z[num][k][j];
+                                
+                                w[k][i][j]=w[k][i][j]-learning*tmp;
                                 
                         }
                     }
                     }
                     
                     else  {
-                        
-                        for (int i=0;i<mid_height;i++) {
-                            sum_z[num][k-1][i]=0;
-                        }
-                        
-                       
-                        for (int i=0;i<mid_height;i++) {
-                            for (int j=0;j<mid_height;j++) {
-                                w[k][i][j]=w[k][i][j]-learning*sigmoid(mid[num][k-1][i])*sigmoid(mid[num][k][j])*(1-sigmoid(mid[num][k][j]))*sum_z[num][k][j];
+                       for (int i=0;i<mid_height;i++) {
+                           for (int j=1;j<=mid_height;j++) {
+                               sum_z[num][k-1][i]+=sum_z[num][k][j-1]*w[k][i+1][j]*sigmoid(mid[num][k][j])*(1-sigmoid(mid[num][k][j]));
+                               
+                           }
+                       }
+                        for (int i=0;i<=mid_height;i++) {
+                            for (int j=1;j<=mid_height;j++) {
+                                double tmp=0;
+                                if (i!=0) { tmp+=sigmoid(mid[num][k-1][i])*sigmoid(mid[num][k][j])*(1-sigmoid(mid[num][k][j]))*sum_z[num][k][j];
+                                
+                                    w[k][i][j]=w[k][i][j]-learning*tmp;
+                                    
+                                }
+                                else { tmp+=data[num][0]*sigmoid(mid[num][k][j])*(1-sigmoid(mid[num][k][j]))*sum_z[num][k][j];
+                                
+                                    w[k][i][j]=w[k][i][j]-learning*tmp;
+                                    
+                                }
                         }
                     }
-                        for (int i=0;i<mid_height;i++) {
-                            for (int j=0;j<mid_height;j++) {
-                                sum_z[num][k-1][i]+=sum_z[num][k][j]*w[k][i][j]*sigmoid(mid[num][k][j])*(1-sigmoid(mid[num][k][j]));
-                                
-                            }
-                        }
+                        
                         
                     }
             }
@@ -269,30 +295,32 @@ int main(int argc, const char * argv[]) {
     
     printf("計算が終了しました。\n");
     
-    for (int num=0;num<datanum+data2num;num++) {
-        for (int i=0;i<outnum;i++) {        //outを初期化
+    fill_v(mid, datanum+data2num, mid_width, mid_height,0);
+    for (int num=0;num<datanum;num++) {        //outを初期化
+        for (int i=0;i<outnum;i++) {
             out[num][i]=0;
         }
+    }
+    
+    for (int num=0;num<datanum+data2num;num++) {
+       
         for (int k=0;k<mid_width+1;k++) {
             if (k == 0) {
                 
-                for (int i=0;i<mid_width;i++) {     //midを初期化
-                    for (int j=0;j<mid_height;j++){
-                        mid[num][i][j]=0;
-                    }
-                }
-                
                 for (int i=0;i<innum+1;i++) {
                     for (int j=0;j<mid_height;j++) {
-                        mid[num][k][j]+=data[num][i]*w[k][i][j];
+                        mid[num][k][j]+=data[num][i]*w[k][i][j+1];
                     }
                 }
             }
             else if (k == mid_width) {
                 for (int i=0;i<mid_height;i++) {
                     for (int j=0;j<outnum;j++) {
-                        out[num][j]+=mid[num][k-1][i]*w[k][i][j];
+                        out[num][j]+=sigmoid(mid[num][k-1][i])*w[k][i+1][j];
                     }
+                }
+                for (int j=0;j<outnum;j++) {
+                    out[num][j]+=data[num][0]*w[k][0][j];
                 }
                 if (num < datanum) {
                     printf("教師データ %d 出力: %lf\n",num+1,sigmoid(out[num][0]));
@@ -305,9 +333,12 @@ int main(int argc, const char * argv[]) {
             }
             else {
                 for (int i=0;i<mid_height;i++) {
-                    for (int j=0;j<mid_height;j++) {
-                        mid[num][k][j]+=mid[num][k-1][i]*w[k][i][j];
+                    for (int j=1;j<=mid_height;j++) {
+                        mid[num][k][j]+=sigmoid(mid[num][k-1][i])*w[k][i+1][j];
                     }
+                }
+                for (int j=1;j<=mid_height;j++) {
+                    mid[num][k][j-1]+=data[num][0]*w[k][0][j];
                 }
             }
         }
@@ -411,5 +442,15 @@ void free_array_sum(int innum, int outnum, int datanum, int mid_width, int mid_h
 
 double sigmoid(double s) {
     return 1/(1+exp(-1*s));
+}
+
+void fill_v(double ***array, int i, int j, int k, double num) {
+    for (int x=0;x<i;x++) {
+        for (int y=0;y<j;y++) {
+            for (int z=0;z<k;z++) {
+                array[x][y][z]=num;
+            }
+        }
+    }
 }
 

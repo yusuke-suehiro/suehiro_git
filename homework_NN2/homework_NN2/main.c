@@ -476,7 +476,7 @@ int main(int argc, const char * argv[]) {
                         }
                     }
                     }
-                printf("cnt %d : %lf\n",cnt,eor);
+               // printf("cnt %d : %lf\n",cnt,eor);
                 if (count==datanum) {
                     cnt=COUNT_SIZE;
                 }
