@@ -311,7 +311,11 @@ int main(int argc, const char * argv[]) {
                         }
                 }
             }
-            n=pow(J1, 1-b)/((count+1)*(1-b));
+            if (learning==0){
+                learning+=1e-8;
+            }
+            r=pow(J,b)/learning;
+            n=pow(J1, 1-b)/(COUNT_SIZE*(1-b));
             for (int h=0;h<dim_h;h++) {
                 for (int k=0;k<clas;k++) {
                     for (int m=0;m<compo;m++) {
@@ -319,7 +323,6 @@ int main(int argc, const char * argv[]) {
                             w[h][k][m]=0;
                         }
                         else {
-                            r=pow(J,b)/learning;
                             w[h][k][m]=w[h][k][m]-n*r*tmp[h][k][m];
                         }
                     }
@@ -390,12 +393,12 @@ int main(int argc, const char * argv[]) {
               //wを更新
               initialize3(tmp,dim_h,clas,compo);
               learning=0;
-              n=pow(J1, 1-b)/((count+1)*(1-b));
+              n=pow(J1, 1-b)/(COUNT_SIZE*(1-b));
               for (int h=0;h<dim_h;h++) {
                   for (int num=0;num<datanum;num++) {
                       for (int k=0;k<clas;k++) {
                           for (int m=0;m<compo;m++) {
-                              tmp[h][k][m]=(in_2[num][k]-data_lea_T[num][k])*out_1[num][k][m]*trans_data[num][h]/in_2[num][k];
+                              tmp[h][k][m]+=(in_2[num][k]-data_lea_T[num][k])*out_1[num][k][m]*trans_data[num][h]/in_2[num][k];
                           }
                       }
                   }
@@ -412,11 +415,13 @@ int main(int argc, const char * argv[]) {
                       for (int k=0;k<clas;k++) {
                           for (int m=0;m<compo;m++) {
                               tmp[h][k][m]=(in_2[num][k]-data_lea_T[num][k])*out_1[num][k][m]*trans_data[num][h]/in_2[num][k];
-                              
                               if (k == 3 && m == 1) {
                                   w[h][k][m]=0;
                               }
                               else {
+                                  if (learning==0) {
+                                      learning+=1e-8;
+                                  }
                                   r=pow(J,b)/learning;
                                   w[h][k][m]=w[h][k][m]-n*r*tmp[h][k][m];
                               }
