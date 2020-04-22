@@ -21,6 +21,7 @@ void initialize2(double **array, int first, int second);    //初期化する関
 void initialize3(double ***array, int first, int second, int third);    //初期化する関数
 
 
+
 int main(int argc, const char * argv[]) {
     
     FILE *fp;
