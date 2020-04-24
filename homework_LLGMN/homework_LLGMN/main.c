@@ -39,8 +39,7 @@ int main(int argc, const char * argv[]) {
     input_data(&compo);
     printf("入力次元数を");
     input_data(&dim);
-    printf("非線形変換後の次元数を");
-    input_data(&dim_h);
+    dim_h=1+dim*(dim+3)/2;
     printf("クラス数を");
     input_data(&clas);
     printf("データ数を");
@@ -289,7 +288,7 @@ int main(int argc, const char * argv[]) {
                     J+=-1*data_lea_T[num][now]*log(in_2[num][now]);
                 }
             }
-            //printf("count %d  誤差関数%lf\n",count, J);
+            printf("count %d  誤差関数%lf\n",count, J);
             //wを更新
             initialize3(tmp,dim_h,clas,compo);
             for (int h=0;h<dim_h;h++) {
