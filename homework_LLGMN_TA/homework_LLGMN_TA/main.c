@@ -38,8 +38,7 @@ int main(int argc, const char * argv[]) {
     input_data(&compo);
     printf("入力次元数を");
     input_data(&dim);
-    printf("非線形変換後の次元数を");
-    input_data(&dim_h);
+    dim_h=1+dim*(dim+3)/2;
     printf("クラス数を");
     input_data(&clas);
     printf("データ数を");
