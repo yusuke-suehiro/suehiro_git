@@ -426,6 +426,9 @@ int main(int argc, const char * argv[]) {
                       J+=-1*data_lea_T[num][now]*log(in_2[num][now]);
                   }
               }
+              if (count == 0) {       //評価関数の初期値
+                  J1=J;
+              }
               printf("count %d  誤差関数%lf\n",count, J);
               if (J < 15){
                   count=COUNT_SIZE;
@@ -434,7 +437,26 @@ int main(int argc, const char * argv[]) {
               for (int num=0;num<datanum;num++) {
                   sum_flag[num]=0;
               }
+              learning=0;
+              n=pow(J1, 1-b)/(COUNT_SIZE*(1-b));
               int ran=0;
+              initialize3(tmp,dim_h,clas,compo);
+              for (int h=0;h<dim_h;h++) {
+                  for (int num=0;num<datanum;num++) {
+                      for (int k=0;k<clas;k++) {
+                          for (int m=0;m<compo;m++) {
+                              tmp[h][k][m]+=(in_2[num][k]-data_lea_T[num][k])*out_1[num][k][m]*trans_data[num][h]/in_2[num][k];
+                          }
+                      }
+                  }
+              }
+              for (int h=0;h<dim_h;h++) {
+                  for (int k=0;k<clas;k++) {
+                      for (int m=0;m<compo;m++) {
+                          learning+=tmp[h][k][m]*tmp[h][k][m];
+                      }
+                  }
+              }
               initialize3(tmp,dim_h,clas,compo);
               for (int h=0;h<dim_h;h++) {
                   for (int num=0;num<datanum;num++) {
@@ -456,7 +478,11 @@ int main(int argc, const char * argv[]) {
                                   w[h][k][m]=0;
                               }
                               else {
-                                  w[h][k][m]=w[h][k][m]-learning*tmp[h][k][m];
+                                  if (learning==0) {
+                                      learning+=1e-8;
+                                  }
+                                  r=pow(J,b)/learning;
+                                  w[h][k][m]=w[h][k][m]-n*r*tmp[h][k][m];
                               }
                           }
                        }
