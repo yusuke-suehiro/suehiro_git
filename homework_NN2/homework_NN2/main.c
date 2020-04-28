@@ -207,7 +207,7 @@ int main(int argc, const char * argv[]) {
                     }
                 }
             }
-                //printf("cnt %d : %lf\n",cnt,eor);
+                printf("cnt %d : %lf\n",cnt,eor);
             
                 for (int num=0;num<datanum;num++) {
                     for (int layer=0;layer<mid_width+2;layer++) {
