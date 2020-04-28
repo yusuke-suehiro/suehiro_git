@@ -628,27 +628,34 @@ int main(int argc, const char * argv[]) {
         }
     }
     double per=0;
+    fp=fopen("result.csv","w");
+    fprintf(fp,"%s,%s,%s,%s,%s,%s","answer","","","","","output\n");
+    fprintf(fp,"%s,%s,%s,%s,%s,%s,%s,%s,%s","ch1","ch2","ch3","ch4","","ch1","ch2","ch3","ch4\n");
     for (int num=0;num<datanum2;num++) {
-        printf("データ%d  正解ベクトル:   ",num);
+        int max_num=0;
+        double max=0;
         for (int now=0;now<clas;now++){
-            printf("%.4lf   ",data_dis_T[num][now]);
+            fprintf(fp,"%.4lf,",data_dis_T[num][now]);
         }
-        printf("\n");
-        printf("データ%d  出力　　　　:   ",num);
+        fprintf(fp,"%s,","");
         for (int now=0;now<clas;now++){
-            printf("%.4lf   ",in_22[num][now]);
+            fprintf(fp,"%.4lf,",in_22[num][now]);
         }
-        printf("\n\n");
+        fprintf(fp,"%s","\n");
         for (int now=0;now<clas;now++) {
-            if (data_dis_T[num][now] == 1  && in_22[num][now] > 0.5) {
-                per+=1;
+            if (max < in_22[num][now]) {
+                max=in_22[num][now];
+                max_num=now;
             }
+        }
+        if (data_dis_T[num][max_num] == 1) {
+            per+=1;
         }
     }
     
     printf("識別率 : %.2lf %%\n",per/datanum2*100);
     
-    
+    fclose(fp);
     
     
         
