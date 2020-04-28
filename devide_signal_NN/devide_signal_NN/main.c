@@ -11,7 +11,7 @@
 #include <time.h>
 #include <math.h>
 
-#define COUNT_SIZE 1000
+#define COUNT_SIZE 500
 
 void input_data(int *num);      //データの入力をする関数
 void output_w(int innum, int outnum, int mid_width, int mid_height, double ***w);
@@ -210,7 +210,9 @@ int main(int argc, const char * argv[]) {
         }
         printf("\n");
     }*/
-    
+    fp=fopen("result.csv","w");
+    fprintf(fp,"%s,%s,%s,%s,%s,%s","answer","","","","","output\n");
+    fprintf(fp,"%s,%s,%s,%s,%s,%s,%s,%s,%s","ch1","ch2","ch3","ch4","","ch1","ch2","ch3","ch4\n");
     if (flag==1) {      //一括学習
         printf("計算中...\n\n");
         
@@ -424,34 +426,28 @@ int main(int argc, const char * argv[]) {
                     }
                     else {
                         if (num<datanum) {
-                            printf("教師データ 出力　 %d: ",num+1);
-                            for (int out=1;out<outnum+1;out++) {
-                                mid[num][layer][out]=sigmoid(sum_u[num][layer][out]);
-                                printf("%.4lf ",mid[num][layer][out]);
-                            }
-                            printf("\n");
-                            printf("教師データ データ %d: ",num+1);
-                            for (int out=1;out<outnum+1;out++) {
-                                printf("%d      ",result[num][out]);
-                            }
-                            printf("\n\n");
+                            
                         }
                         else {
-                            printf("未学習データ 出力　 %d: ",num-datanum+1);
+                            int max_num=0;
+                            double max=0;
+                            for (int out=1;out<outnum+1;out++) {
+                               fprintf(fp,"%d,",result[num][out]);
+                            }
+                            fprintf(fp,"%s,","");
                             for (int out=1;out<outnum+1;out++) {
                                 mid[num][layer][out]=sigmoid(sum_u[num][layer][out]);
-                                printf("%.4lf ",mid[num][layer][out]);
+                                fprintf(fp,"%.4lf,",mid[num][layer][out]);
                             }
-                            printf("\n");
-                            printf("未学習データ データ %d: ",num-datanum+1);
+                            fprintf(fp,"%s","\n");
                             for (int out=1;out<outnum+1;out++) {
-                               printf("%d      ",result[num][out]);
-                            }
-                            printf("\n\n");
-                            for (int out=1;out<outnum+1;out++) {
-                                if (mid[num][layer][out] > 0.5 && result[num][out] == 1) {
-                                    per+=1;
+                                if (max < mid[num][layer][out]) {
+                                    max=mid[num][layer][out];
+                                    max_num=out;
                                 }
+                            }
+                            if (result[num][max_num] == 1) {
+                                per+=1;
                             }
                         }
                     }
@@ -661,34 +657,28 @@ int main(int argc, const char * argv[]) {
                            }
                            else {
                                if (num<datanum) {
-                                   printf("教師データ 出力　 %d: ",num+1);
-                                   for (int out=1;out<outnum+1;out++) {
-                                       mid[num][layer][out]=sigmoid(sum_u[num][layer][out]);
-                                       printf("%.4lf ",mid[num][layer][out]);
-                                   }
-                                   printf("\n");
-                                   printf("教師データ データ %d: ",num+1);
-                                   for (int out=1;out<outnum+1;out++) {
-                                       printf("%d      ",result[num][out]);
-                                   }
-                                   printf("\n\n");
+                                
                                }
                                else {
-                                   printf("未学習データ 出力　 %d: ",num-datanum+1);
+                                   int max_num=0;
+                                   double max=0;
+                                   for (int out=1;out<outnum+1;out++) {
+                                      fprintf(fp,"%d,",result[num][out]);
+                                   }
+                                   fprintf(fp,"%s,","");
                                    for (int out=1;out<outnum+1;out++) {
                                        mid[num][layer][out]=sigmoid(sum_u[num][layer][out]);
-                                       printf("%.4lf ",mid[num][layer][out]);
+                                       fprintf(fp,"%.4lf,",mid[num][layer][out]);
                                    }
-                                   printf("\n");
-                                   printf("未学習データ データ %d: ",num-datanum+1);
+                                   fprintf(fp,"%s","\n");
                                    for (int out=1;out<outnum+1;out++) {
-                                      printf("%d      ",result[num][out]);
-                                   }
-                                   printf("\n\n");
-                                   for (int out=1;out<outnum+1;out++) {
-                                       if (mid[num][layer][out] > 0.5 && result[num][out] == 1) {
-                                           per+=1;
+                                       if (max < mid[num][layer][out]) {
+                                           max=mid[num][layer][out];
+                                           max_num=out;
                                        }
+                                   }
+                                   if (result[num][max_num] == 1) {
+                                       per+=1;
                                    }
                                }
                            }
@@ -726,7 +716,7 @@ int main(int argc, const char * argv[]) {
     
     
     
-    
+    fclose(fp);
     printf("識別率 : %.2lf %%\n",per/data2num*100);
     
     free_array(innum, outnum, mid_width, mid_height, w);
