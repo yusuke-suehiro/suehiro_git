@@ -11,7 +11,7 @@
 #include <time.h>
 #include <math.h>
 
-#define COUNT_SIZE 10000
+#define COUNT_SIZE 5000
 
 void input_data(int *num);      //データの入力をする関数
 void free_data(double **array, int datanum);    //領域を解放する関数
