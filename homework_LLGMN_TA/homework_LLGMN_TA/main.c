@@ -500,10 +500,14 @@ int main(int argc, const char * argv[]) {
             }
         }
     }
+    double a=0;
     for (int num=0;num<datanum;num++) {
         printf("データ%d  正解ベクトル:   ",num);
         for (int now=0;now<clas;now++){
             printf("%.4lf   ",data_dis_T[num][now]);
+            if (data_dis_T[num][now] == 1 && in_2[num][now] > 0.5) {
+                a+=1;
+            }
         }
         printf("\n");
         printf("データ%d  出力　　　　:   ",num);
@@ -512,7 +516,7 @@ int main(int argc, const char * argv[]) {
         }
         printf("\n\n");
     }
-    
+    printf("識別率 : %lf\n%%",a/datanum*100);
     
     
     

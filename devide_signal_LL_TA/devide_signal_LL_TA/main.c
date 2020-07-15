@@ -11,7 +11,7 @@
 #include <time.h>
 #include <math.h>
 
-#define COUNT_SIZE 500
+#define COUNT_SIZE 100
 
 void input_data(int *num);      //データの入力をする関数
 void free_data(double **array, int datanum);    //領域を解放する関数
@@ -628,12 +628,13 @@ int main(int argc, const char * argv[]) {
         }
     }
     double per=0;
-    fp=fopen("result.csv","w");
-    fprintf(fp,"%s,%s,%s,%s,%s,%s","answer","","","","","output\n");
-    fprintf(fp,"%s,%s,%s,%s,%s,%s,%s,%s,%s","ch1","ch2","ch3","ch4","","ch1","ch2","ch3","ch4\n");
+    fp=fopen("result_LLTA.csv","w");
+    fprintf(fp,"%s,%s,%s,%s,%s,%s,%s","","answer","","","","","output\n");
+    fprintf(fp,"%s,%s,%s,%s,%s,%s,%s,%s,%s,%s","","ch1","ch2","ch3","ch4","","ch1","ch2","ch3","ch4\n");
     for (int num=0;num<datanum2;num++) {
         int max_num=0;
         double max=0;
+        fprintf(fp,"%d,",num);
         for (int now=0;now<clas;now++){
             fprintf(fp,"%.4lf,",data_dis_T[num][now]);
         }

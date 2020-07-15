@@ -121,7 +121,7 @@ int main(int argc, const char * argv[]) {
             }
         }
     }
-    fp=fopen("file_data1.txt","r");
+    fp=fopen("file_data3.txt","r");
     
     if (fp == NULL) {
         printf("ファイルがオープンできません\n");
@@ -141,7 +141,7 @@ int main(int argc, const char * argv[]) {
        j=0;
     }
     fclose(fp);
-    fp=fopen("file_data3.txt","r");
+    fp=fopen("file_data2.txt","r");
      
      if (fp == NULL) {
          printf("ファイルがオープンできません\n");
@@ -161,7 +161,7 @@ int main(int argc, const char * argv[]) {
         j=0;
     }
     fclose(fp);
-    fp=fopen("T_data1.txt","r");
+    fp=fopen("T_data3.txt","r");
     
     if (fp == NULL) {
         printf("ファイルがオープンできません\n");
@@ -183,7 +183,7 @@ int main(int argc, const char * argv[]) {
        jj=0;
     }
     fclose(fp);
-    fp=fopen("T_data3.txt","r");
+    fp=fopen("T_data2.txt","r");
     
     if (fp == NULL) {
         printf("ファイルがオープンできません\n");
@@ -210,9 +210,9 @@ int main(int argc, const char * argv[]) {
         }
         printf("\n");
     }*/
-    fp=fopen("result.csv","w");
-    fprintf(fp,"%s,%s,%s,%s,%s,%s","answer","","","","","output\n");
-    fprintf(fp,"%s,%s,%s,%s,%s,%s,%s,%s,%s","ch1","ch2","ch3","ch4","","ch1","ch2","ch3","ch4\n");
+    fp=fopen("result_NN.csv","w");
+    fprintf(fp,"%s,%s,%s,%s,%s,%s,%s","","answer","","","","","output\n");
+    fprintf(fp,"%s,%s,%s,%s,%s,%s,%s,%s,%s,%s","","ch1","ch2","ch3","ch4","","ch1","ch2","ch3","ch4\n");
     if (flag==1) {      //一括学習
         printf("計算中...\n\n");
         
@@ -431,6 +431,7 @@ int main(int argc, const char * argv[]) {
                         else {
                             int max_num=0;
                             double max=0;
+                            fprintf(fp,"%d,",num-datanum);
                             for (int out=1;out<outnum+1;out++) {
                                fprintf(fp,"%d,",result[num][out]);
                             }
@@ -662,6 +663,7 @@ int main(int argc, const char * argv[]) {
                                else {
                                    int max_num=0;
                                    double max=0;
+                                   fprintf(fp,"%d,",num-datanum);
                                    for (int out=1;out<outnum+1;out++) {
                                       fprintf(fp,"%d,",result[num][out]);
                                    }

@@ -55,12 +55,12 @@ int main(int argc, const char * argv[]) {
     for (int i=0;i<datanum;i++) {
         data_lea[i]=(double *)malloc((dim)*sizeof(double *));     //入力数分、領域確保
     }
-    fp=fopen("file_data3.txt","r");
+    fp=fopen("遷移ありデータ_2.csv","r");      //教師，筋電
     if (fp == NULL) {
         printf("ファイルがオープンできません\n");
         return 0;
     }
-    while (fscanf(fp,"%lf %lf %lf %lf", &para1, &para2, &para3, &para4)!=EOF) {
+    while (fscanf(fp,"%lf,%lf,%lf,%lf", &para1, &para2, &para3, &para4)!=EOF) {
         data_lea[i][j]=para1;
         j+=1;
         data_lea[i][j]=para2;
@@ -76,21 +76,22 @@ int main(int argc, const char * argv[]) {
     for (int i=0;i<datanum;i++) {
         data_lea_T[i]=(double *)malloc((clas)*sizeof(double *));     //入力数分、領域確保
     }
-    fp=fopen("T_data3.txt","r");
+    fp=fopen("遷移あり未学習ありラベル_2.csv","r");        //教師，ラベル
     if (fp == NULL) {
         printf("ファイルがオープンできません\n");
         return 0;
     }
     i=0;
     j=0;
-    while (fscanf(fp,"%lf %lf %lf %lf", &para1, &para2, &para3, &para4)!=EOF) {
+    //while (fscanf(fp,"%lf,%lf,%lf,%lf", &para1, &para2, &para3, &para4)!=EOF) {
+    while (fscanf(fp,"%lf,%lf,%lf", &para1, &para2, &para3)!=EOF) {
         data_lea_T[i][j]=para1;
         j+=1;
         data_lea_T[i][j]=para2;
         j+=1;
         data_lea_T[i][j]=para3;
-        j+=1;
-        data_lea_T[i][j]=para4;
+        /*j+=1;
+        data_lea_T[i][j]=para4;*/
         i+=1;
         j=0;
     }
@@ -99,7 +100,7 @@ int main(int argc, const char * argv[]) {
     for (int i=0;i<datanum2;i++) {
         data_dis[i]=(double *)malloc((dim)*sizeof(double *));     //入力数分、領域確保
     }
-    fp=fopen("file_data2.txt","r");
+    fp=fopen("遷移ありデータ_1.csv","r");      //テスト，筋電
     
     if (fp == NULL) {
         printf("ファイルがオープンできません\n");
@@ -107,7 +108,7 @@ int main(int argc, const char * argv[]) {
     }
     i=0;
     j=0;
-    while (fscanf(fp,"%lf %lf %lf %lf", &para1, &para2, &para3, &para4)!=EOF) {
+    while (fscanf(fp,"%lf,%lf,%lf,%lf", &para1, &para2, &para3, &para4)!=EOF) {
         data_dis[i][j]=para1;
         j+=1;
         data_dis[i][j]=para2;
@@ -124,21 +125,22 @@ int main(int argc, const char * argv[]) {
     for (int i=0;i<datanum2;i++) {
         data_dis_T[i]=(double *)malloc((clas)*sizeof(double *));     //入力数分、領域確保
     }
-    fp=fopen("T_data2.txt","r");
+    fp=fopen("遷移あり未学習ありラベル_1.csv","r");        //テスト，ラベル
     if (fp == NULL) {
         printf("ファイルがオープンできません\n");
         return 0;
     }
     i=0;
     j=0;
-    while (fscanf(fp,"%lf %lf %lf %lf", &para1, &para2, &para3, &para4)!=EOF) {
+    //while (fscanf(fp,"%lf,%lf,%lf,%lf", &para1, &para2, &para3, &para4)!=EOF) {
+    while (fscanf(fp,"%lf,%lf,%lf", &para1, &para2, &para3)!=EOF) {
         data_dis_T[i][j]=para1;
         j+=1;
         data_dis_T[i][j]=para2;
         j+=1;
         data_dis_T[i][j]=para3;
-        j+=1;
-        data_dis_T[i][j]=para4;
+        /*j+=1;
+        data_dis_T[i][j]=para4;*/
         i+=1;
         j=0;
     }
@@ -586,12 +588,13 @@ int main(int argc, const char * argv[]) {
         }
     }
     double per=0;
-    fp=fopen("result.csv","w");
-    fprintf(fp,"%s,%s,%s,%s,%s,%s","answer","","","","","output\n");
-    fprintf(fp,"%s,%s,%s,%s,%s,%s,%s,%s,%s","ch1","ch2","ch3","ch4","","ch1","ch2","ch3","ch4\n");
+    fp=fopen("result_LL.csv","w");
+    fprintf(fp,"%s,%s,%s,%s,%s,%s,%s","","answer","","","","","output\n");
+    fprintf(fp,"%s,%s,%s,%s,%s,%s,%s,%s,%s,%s","","ch1","ch2","ch3","ch4","","ch1","ch2","ch3","ch4\n");
     for (int num=0;num<datanum2;num++) {
         int max_num=0;
         double max=0;
+        fprintf(fp,"%d,",num);
         for (int now=0;now<clas;now++){
             fprintf(fp,"%.4lf,",data_dis_T[num][now]);
         }
